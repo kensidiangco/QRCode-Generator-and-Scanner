@@ -1,40 +1,59 @@
-import React, {useState, useRef} from 'react';
-import {Container, Card, CardContent, makeStyles, Grid, TextField, Button} from '@material-ui/core';
+import React, {useState, useRef, useEffect} from 'react';
+import {Container, Card, CardContent, makeStyles, Grid, TextField, Button, setRef} from '@material-ui/core';
 import QRCode from 'qrcode';
 import QrReader from 'react-qr-reader';
 
 
 function App() { 
-  const [text, setText] = useState('');
+  const [id, setId] = useState('');
+  const [name, setName] = useState('');
+  const [course, setCourse] = useState('');
   const [imageUrl, setImageUrl] = useState('');
-  const [scanResultFile, setScanResultFile] = useState('');
-  const [scanResultWebCam, setScanResultWebCam] =  useState('');
+  const [scanResultFile, setScanResultFile] = useState();
+  const [scanResultWebCam, setScanResultWebCam] =  useState();
   const classes = useStyles();
   const qrRef = useRef(null);
 
+  const [qrResult, setQrResult] = useState('');
+  const [parsedResult, setParsedResult] = useState('');
+
+  const obj = {
+    'id': id,
+    'name': name,
+    'course': course
+  }
+
+  useEffect(() => {
+    setQrResult(JSON.stringify(scanResultFile))
+    
+  },[scanResultFile])
 
   const generateQrCode = async () => {
     try {
-          const response = await QRCode.toDataURL(text);
+          const response = await QRCode.toDataURL(JSON.stringify(obj));
           setImageUrl(response);
     }catch (error) {
       console.log(error);
     }
   }
+
   const handleErrorFile = (error) => {
     console.log(error);
   }
   const handleScanFile = (result) => {
       if (result) {
-          setScanResultFile(result);
+          setScanResultFile(JSON.parse(result));
       }
   }
+  
   const onScanFile = () => {
     qrRef.current.openImageDialog();
   }
+
   const handleErrorWebCam = (error) => {
     console.log(error);
   }
+
   const handleScanWebCam = (result) => {
     if (result){
         setScanResultWebCam(result);
@@ -47,7 +66,9 @@ function App() {
               <CardContent>
                   <Grid container spacing={2}>
                       <Grid item xl={4} lg={4} md={6} sm={12} xs={12}>
-                          <TextField label="Enter Text Here" onChange={(e) => setText(e.target.value)}/>
+                          <TextField label="id" onChange={(e) => setId(e.target.value)}/><br/>
+                          <TextField label="Name" onChange={(e) => setName(e.target.value)}/><br/>
+                          <TextField label="Course" onChange={(e) => setCourse(e.target.value)}/><br/>
                           <Button className={classes.btn} variant="contained" 
                             color="primary" onClick={() => generateQrCode()}>Generate</Button>
                             <br/>
@@ -68,17 +89,23 @@ function App() {
                           onScan={handleScanFile}
                           legacyMode
                         />
-                        <h3>Scanned Code: {scanResultFile}</h3>
+                        <h3>Scanned Code: {qrResult}</h3>
                       </Grid>
                       <Grid item xl={4} lg={4} md={6} sm={12} xs={12}>
                          <h3>Qr Code Scan by Web Cam</h3>
-                         <QrReader
-                         delay={300}
-                         style={{width: '100%'}}
-                         onError={handleErrorWebCam}
-                         onScan={handleScanWebCam}
-                         />
-                         <h3>Scanned By WebCam Code: {scanResultWebCam}</h3>
+                         {/* <QrReader
+                          delay={300}
+                          style={{width: '100%'}}
+                          onError={handleErrorWebCam}
+                          onScan={handleScanWebCam}
+                         /> */}
+                         <h3>Scanned By WebCam Code:<br/>
+                          {scanResultFile && Object.keys(scanResultFile)?.map((keyName, i) => (
+                            <>
+                            {keyName}{' '}<input type="text" value={scanResultFile[keyName]} /><br/>
+                            </>
+                          ))}
+                          </h3>
                       </Grid>
                   </Grid>
               </CardContent>
